@@ -8,5 +8,4 @@ script = ExtResource("1_onrkg")
 
 [node name="Tile0004" type="Sprite2D" parent="." unique_id=1778295117]
 texture_filter = 1
-scale = Vector2(10, 10)
 texture = ExtResource("2_onrkg")
