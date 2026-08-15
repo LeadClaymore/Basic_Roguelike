@@ -2,7 +2,7 @@ extends Node2D
 
 var playerFile := "user://PlayerFile.json"
 
-var grid_pos: Vector2i = Vector2i(0, 0)
+#var grid_pos: Vector2i = Vector2i(0, 0)
 var p_mhp: float = 100.0
 var p_hp: float = p_mhp
 var p_gp: int = 100
