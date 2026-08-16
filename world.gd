@@ -24,12 +24,25 @@ const T_No: Vector2i = Vector2i(1, 0)
 const T_Unk: Vector2i = Vector2i(4, 7)
 ## 2D array of Tile enums
 var tile_list: Array = []
+# 9223372036854775807 is int max
+var tile_min_bounds: Vector2i = Vector2i(9223372036854775807, 9223372036854775808)
+var tile_max_bounds: Vector2i = Vector2i(-9223372036854775807, -9223372036854775808)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	for ii in range(map_size):
 		var map_slice: Array[Tile] = []
 		for jj in range(map_size):
+			if tile_min_bounds.x > ii:
+				tile_min_bounds.x = ii
+			elif tile_max_bounds.x < ii:
+				tile_max_bounds.x = ii
+			
+			if tile_min_bounds.y > jj:
+				tile_min_bounds.y = jj
+			elif tile_max_bounds.y < jj:
+				tile_max_bounds.y = jj
+			
 			if ii > 0 && ii < map_size - 1 && jj > 0 && jj < map_size - 1:
 				map_slice.append(Tile.Y)
 			else:
@@ -76,8 +89,8 @@ func _process(_delta: float) -> void:
 	
 func _move_to(who: Node2D, from: Vector2i, to: Vector2i) -> bool:
 	#print(who.position)
-	if to.x < 0 || to.x > map_size || to.y < 0 || to.y > map_size:
-		push_error("%s is trying to move to %s, map_size is %d" %[who, to, map_size])
+	if to.x < tile_min_bounds.x || to.x > tile_max_bounds.x || to.y < tile_min_bounds.y || to.y > tile_max_bounds.y:
+		push_error("%s is trying to move to %s, map_size is %d, min_bound = %s, max_bound = %s" %[who, to, map_size, tile_min_bounds, tile_max_bounds])
 		return false
 	
 	if entity_list.has(to):

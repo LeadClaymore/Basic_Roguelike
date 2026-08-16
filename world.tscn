@@ -183,7 +183,7 @@ scale = Vector2(0.078125, 0.07812499)
 texture = ExtResource("2_tlwt5")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1991081504]
-position = Vector2(-12, -12)
+position = Vector2(-4, -4)
 scale = Vector2(0.99999994, 1)
 tile_set = SubResource("TileSet_dsw3d")
 
