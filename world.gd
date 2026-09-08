@@ -30,13 +30,10 @@ var tile_list: Array = []
 var tile_min_bounds: Vector2i = Vector2i(9223372036854775807, 9223372036854775808)
 var tile_max_bounds: Vector2i = Vector2i(-9223372036854775807, -9223372036854775808)
 
-@export var input_delay: float = 30.0
+# Note on my testing, Dad got 100, I had 15ish when trying but should see if 30 or 50 work better
+@export var input_delay: float = 50.0
 var delay_end: float = 0.0
 var curr_inputs: Dictionary[String, bool] = {}
-
-var last_input_time: float = 0.0
-var all_input_times: float = 0.0
-var input_count: int = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -67,6 +64,12 @@ func _ready() -> void:
 	entity_list.set(player_curr_pos, player)
 	player.position = Vector2(player_starting_pos.x * 8, player_starting_pos.y * 8)
 	
+	print("max int: %d"%[9223372036854775807])
+	var mint := 9223372036854775807
+	print("max int: %d"%[mint])
+	mint += 1
+	print("max int: %d"%[mint])
+	
 	pass # Replace with function body.
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -74,6 +77,14 @@ func _process(_delta: float) -> void:
 	# only 1 input every (input_timeout)
 	if Time.get_ticks_msec() < timeout_end:
 		return
+	
+	if curr_inputs && !delay_end:
+		delay_end = Time.get_ticks_msec() + input_delay
+		#print("Delay till <%s>"%[delay_end])
+		return
+	elif delay_end > Time.get_ticks_msec():
+		return
+	
 	var dir: Vector2i = Vector2i.ZERO
 	for ii in curr_inputs.keys():
 		match ii:
@@ -89,16 +100,10 @@ func _process(_delta: float) -> void:
 				pass
 			_:
 				pass
-	curr_inputs.clear()
-	
+				
 	if dir:
-		var dif := Time.get_ticks_msec() - last_input_time
-		if dif < 500.0:
-			input_count += 1
-			all_input_times += dif
-			print("<%s> %s Avr[%s]"%[input_count, dif, all_input_times / input_count])
-		last_input_time = Time.get_ticks_msec()
-		
+		curr_inputs.clear()
+		delay_end = 0.0
 		print("%s -> %s, <%s>" %[player_curr_pos, player_curr_pos + Vector2i(dir), Time.get_ticks_msec()])
 		if !_move_to(player, player_curr_pos, player_curr_pos + Vector2i(dir)):
 			# Something stoped the player from moving
