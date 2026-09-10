@@ -184,6 +184,7 @@ sources/1 = SubResource("TileSetAtlasSource_dwbse")
 
 [node name="World" type="Node2D" unique_id=1315727979]
 script = ExtResource("1_f3sb7")
+map_size = 20
 
 [node name="Icon" type="Sprite2D" parent="." unique_id=1593183997]
 position = Vector2(4.4703484e-07, -2.3841858e-07)

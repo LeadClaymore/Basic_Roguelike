@@ -27,13 +27,18 @@ const T_Unk: Vector3i = Vector3i(4, 7, 0)
 ## 2D array of Tile enums
 var tile_list: Array = []
 # 9223372036854775807 is int max
-var tile_min_bounds: Vector2i = Vector2i(9223372036854775807, 9223372036854775808)
-var tile_max_bounds: Vector2i = Vector2i(-9223372036854775807, -9223372036854775808)
+var tile_min_bounds: Vector2i = Vector2i(9223372036854775807, 9223372036854775807)
+var tile_max_bounds: Vector2i = Vector2i(-9223372036854775807, -9223372036854775807)
 
 # Note on my testing, Dad got 100, I had 15ish when trying but should see if 30 or 50 work better
 @export var input_delay: float = 50.0
 var delay_end: float = 0.0
 var curr_inputs: Dictionary[String, bool] = {}
+
+const DIRECTIONS = [
+	Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0),
+	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)
+]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -64,13 +69,17 @@ func _ready() -> void:
 	entity_list.set(player_curr_pos, player)
 	player.position = Vector2(player_starting_pos.x * 8, player_starting_pos.y * 8)
 	
-	print("max int: %d"%[9223372036854775807])
-	var mint := 9223372036854775807
-	print("max int: %d"%[mint])
-	mint += 1
-	print("max int: %d"%[mint])
+	# TODO delete testing
+	tile_list[6][6] = Tile.N
+	print("y: %s, n: %s, u: %s, yb: %s"%[Tile.Y, Tile.N, Tile.U, Tile.Yb])
+	for ii in range(tile_list.size()):
+		print(tile_list[ii])
+		
+	print("_AStar start time %s"%[Time.get_ticks_usec()])
+	print(_AStar(tile_list, Vector2i(1, 1), Vector2i(18, 18), false))
+	print("_AStar start time %s"%[Time.get_ticks_usec()])
+	# testing end
 	
-	pass # Replace with function body.
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
@@ -169,3 +178,68 @@ func _set_tileset() -> void:
 					tilemap.set_cell(Vector2i(ii, jj), T_Yes_b.z, Vector2i(T_Yes_b.x, T_Yes_b.y))
 				_:
 					tilemap.set_cell(Vector2i(ii, jj), T_Unk.z, Vector2i(T_Unk.x, T_Unk.y))
+
+func _AStar(grid: Array, from: Vector2i, to: Vector2i, _debug = false) -> Array:
+	# bound check
+	if grid.size() == 0 || map_size < maxi(maxi(from.x, to.x), maxi(from.y, to.y)) || 0 > mini(mini(from.x, to.x), mini(from.y, to.y)):
+		if _debug:
+			print("invalid AStar with \nfrom %s \nto %s \ngrid %s"%[from,to,grid])
+		return []
+	if _debug:
+		print("_AStar start time %s"%[Time.get_ticks_msec()])
+	
+	var open_set: Array = [from]
+	var came_from: Dictionary = {}
+	var g_score: Dictionary = {from: 0}
+	var f_score: Dictionary = {from: to.distance_to(from)}
+	var closed_set: Dictionary = {}
+	
+	while open_set.size() > 0:
+		var curr: Vector2i = open_set[0]
+		var curr_ii = 0
+		for ii in range(open_set.size()):
+			var pos = open_set[ii]
+			if f_score.get(pos, 9223372036854775807) < f_score.get(curr, 9223372036854775807):
+				curr = pos
+				curr_ii = ii
+		
+		if curr == to:
+			var ret = [curr]
+			while came_from.has(curr):
+				curr = came_from[curr]
+				ret.append(curr)
+			ret.reverse()
+			if _debug:
+				print("_AStar start time %s"%[Time.get_ticks_msec()])
+			return ret
+		
+		open_set.remove_at(curr_ii)
+		closed_set[curr] = true
+		
+		for dir in DIRECTIONS:
+			var neighbor = curr + dir
+			if map_size < neighbor.x || map_size < neighbor.y || 0 > neighbor.x || 0 > neighbor.y:
+				# is out of bounds
+				continue
+			if grid[neighbor.x][neighbor.y] != Tile.Y && grid[neighbor.x][neighbor.y] != Tile.Yb:
+				# cant pass
+				if _debug:
+					print("tile %s at %s"%[grid[neighbor.x][neighbor.y], neighbor])
+				continue
+			if closed_set.has(neighbor):
+				# allready counted
+				continue
+			
+			var tentative_g = g_score.get(curr, 9223372036854775807) + 1
+			
+			if tentative_g < g_score.get(neighbor, 9223372036854775807):
+				came_from[neighbor] = curr
+				g_score[neighbor] = tentative_g
+				f_score[neighbor] = tentative_g + to.distance_to(neighbor)
+				
+				if !open_set.has(neighbor):
+					open_set.append(neighbor)
+	if _debug:
+		print("no path from %s to %s"%[from, to])
+		print("_AStar start time %s"%[Time.get_ticks_msec()])
+	return []
